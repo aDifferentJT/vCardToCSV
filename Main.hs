@@ -90,8 +90,9 @@ headerRow :: [String]
 headerRow = ["Full Name", "Surname", "Title", "Company", "Addresses"]
 
 showVCard :: VCard -> [String]
-showVCard card = [replaceWithNewlines . fullName $ card, head . splitOn ';' . name $ card, title card, org card] ++ concat [[t,cleanBlankLines . replaceWithNewlines $ a] | (t,a) <- adr card]
-  where cleanBlankLines :: String -> String
+showVCard card = [replaceWithNewlines . intercalate " " . filter (not . null) $ otherNames, surname, title card, org card] ++ concat [[t,cleanBlankLines . replaceWithNewlines $ a] | (t,a) <- adr card]
+  where (surname:otherNames) = splitOn ';' . name $ card
+        cleanBlankLines :: String -> String
         cleanBlankLines  ""        = ""
         cleanBlankLines (';':xs)  = cleanBlankLines xs
         cleanBlankLines (x:';':xs) = x : ';' : cleanBlankLines xs
@@ -104,5 +105,5 @@ showVCard card = [replaceWithNewlines . fullName $ card, head . splitOn ';' . na
         replaceWithNewlines ('\\':'n':xs)     = ';' : replaceWithNewlines xs
         replaceWithNewlines (x:xs)            = x : replaceWithNewlines xs
 
-main = putStrLn =<< (intercalate "\n" . map (intercalate "," . showVCard) . readVCards . splitOn '\n' . cleanNewlines <$> getContents)
+main = putStrLn =<< (intercalate "\n" . map (intercalate ",") . (headerRow :) . map showVCard . readVCards . splitOn '\n' . cleanNewlines <$> getContents)
 
