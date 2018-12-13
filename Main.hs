@@ -87,20 +87,21 @@ readVCards = foldl (flip processLine) []
         processField (field,args,value) = error ("Unrecognised field " ++ field ++ " with value " ++ value ++ " and args " ++ show args)
 
 headerRow :: [String]
-headerRow = ["Full Name", "Title", "Company", "Addresses"]
+headerRow = ["Full Name", "Surname", "Title", "Company", "Addresses"]
 
 showVCard :: VCard -> [String]
-showVCard card = [fullName card, title card, org card] ++ concat [[t,cleanBlankLines . replaceWithNewlines $ a] | (t,a) <- adr card]
+showVCard card = [replaceWithNewlines . fullName $ card, head . splitOn ';' . name $ card, title card, org card] ++ concat [[t,cleanBlankLines . replaceWithNewlines $ a] | (t,a) <- adr card]
   where cleanBlankLines :: String -> String
-        cleanBlankLines  ""             = ""
-        cleanBlankLines ('\\':'n':xs)   = cleanBlankLines xs
-        cleanBlankLines (x:'\\':'n':xs) = x : '\\' : 'n' : cleanBlankLines xs
-        cleanBlankLines (x:xs)          = x : cleanBlankLines xs
+        cleanBlankLines  ""        = ""
+        cleanBlankLines (';':xs)  = cleanBlankLines xs
+        cleanBlankLines (x:';':xs) = x : ';' : cleanBlankLines xs
+        cleanBlankLines (x:xs)     = x : cleanBlankLines xs
         replaceWithNewlines :: String -> String
         replaceWithNewlines  ""               = ""
-        replaceWithNewlines (';':xs)          = '\\' : 'n' : replaceWithNewlines xs
-        replaceWithNewlines ('\\':',':' ':xs) = '\\' : 'n' : replaceWithNewlines xs
-        replaceWithNewlines ('\\':',':xs)     = '\\' : 'n' : replaceWithNewlines xs
+        replaceWithNewlines (';':xs)          = ';' : replaceWithNewlines xs
+        replaceWithNewlines ('\\':',':' ':xs) = ';' : replaceWithNewlines xs
+        replaceWithNewlines ('\\':',':xs)     = ';' : replaceWithNewlines xs
+        replaceWithNewlines ('\\':'n':xs)     = ';' : replaceWithNewlines xs
         replaceWithNewlines (x:xs)            = x : replaceWithNewlines xs
 
 main = putStrLn =<< (intercalate "\n" . map (intercalate "," . showVCard) . readVCards . splitOn '\n' . cleanNewlines <$> getContents)
