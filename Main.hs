@@ -76,15 +76,17 @@ readVCards = foldl (flip processLine) []
         processField ("NOTE"           ,[]                              ,n      ) = \(x:xs) -> x { note     = n }                : xs
         processField ("CATEGORIES"     ,[]                              ,_      ) = id
         processField ("UID"            ,[]                              ,_      ) = id
+        processField ("URL"            ,[]                              ,_      ) = id
         processField ("END"            ,[]                              ,"VCARD") = id
         processField ("X-ABUID"        ,[]                              ,_      ) = id
         processField ("X-SOCIALPROFILE",_                               ,_      ) = id
         processField ("X-ABADR"        ,[]                              ,_      ) = id
         processField ("X-ABLabel"      ,[]                              ,_      ) = id
+        processField ("X-Jabber"       ,[]                              ,_      ) = id
         processField ("IMPP"           ,_                               ,_      ) = id
         processField ("BDAY"           ,_                               ,_      ) = id
         processField ("PHOTO"          ,_                               ,_      ) = id
-        processField (field,args,value) = error ("Unrecognised field " ++ field ++ " with value " ++ value ++ " and args " ++ show args)
+        processField (field,args,value) = id -- error ("Unrecognised field " ++ field ++ " with value " ++ value ++ " and args " ++ show args)
 
 headerRow :: [String]
 headerRow = ["Full Name", "Surname", "Title", "Company", "Addresses"]
@@ -102,6 +104,7 @@ showVCard card = [replaceWithNewlines . intercalate " " . filter (not . null) $ 
         replaceWithNewlines (';':xs)          = ';' : replaceWithNewlines xs
         replaceWithNewlines ('\\':',':' ':xs) = ';' : replaceWithNewlines xs
         replaceWithNewlines ('\\':',':xs)     = ';' : replaceWithNewlines xs
+        replaceWithNewlines (',':xs)     = ';' : replaceWithNewlines xs
         replaceWithNewlines ('\\':'n':xs)     = ';' : replaceWithNewlines xs
         replaceWithNewlines (x:xs)            = x : replaceWithNewlines xs
 
